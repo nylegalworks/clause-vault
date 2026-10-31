@@ -1,0 +1,18 @@
+# Virtual environment (recreate it with: python3 -m venv .venv)
+.venv/
+
+# Secrets: never commit these
+.env
+.env.*
+
+# Python's automatically generated cache files
+__pycache__/
+*.pyc
+
+# Downloaded EDGAR data (can be large; re-download as needed)
+data/
+
+# macOS and editor clutter
+.DS_Store
+.vscode/
+.idea/
