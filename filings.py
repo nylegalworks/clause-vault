@@ -27,10 +27,13 @@ def find_cik(ticker):
 
 
 def main():
-    # sys.argv is the list of words you typed: ["filings.py", "AAPL"]
-    if len(sys.argv) != 2:
-        sys.exit("Usage: python filings.py TICKER")
+    # sys.argv is the list of words you typed: ["filings.py", "AAPL", "10-K"]
+    if len(sys.argv) not in (2, 3):
+        sys.exit("Usage: python filings.py TICKER [FORM], e.g. python filings.py AAPL 10-K")
     ticker = sys.argv[1]
+    form_filter = None  # None means "show every form type"
+    if len(sys.argv) == 3:
+        form_filter = sys.argv[2].upper()  # so "10-k" works too
 
     # Step 1: turn the ticker into a CIK.
     cik = find_cik(ticker)
@@ -44,14 +47,22 @@ def main():
     # "recent" holds side-by-side lists; position 0 in each is the newest filing.
     recent = data["filings"]["recent"]
 
-    # Step 3: print a table of the 10 most recent filings.
-    print(f"\n10 most recent filings for {data['name']} (CIK {cik})\n")
+    # Step 3: print up to 10 recent filings, skipping other forms if a filter was given.
+    print(f"\nRecent filings for {data['name']} (CIK {cik})\n")
     print(f"{'Date':<12}{'Form':<10}Link")
-    for i in range(min(10, len(recent["form"]))):
+    shown = 0  # how many rows we've printed so far
+    for i in range(len(recent["form"])):
+        if form_filter is not None and recent["form"][i] != form_filter:
+            continue  # wrong form type: skip to the next filing
         accession = recent["accessionNumber"][i]  # e.g., "0000320193-24-000123"
         folder = accession.replace("-", "")       # same number without dashes
         link = f"https://www.sec.gov/Archives/edgar/data/{cik}/{folder}/{accession}-index.htm"
         print(f"{recent['filingDate'][i]:<12}{recent['form'][i]:<10}{link}")
+        shown = shown + 1
+        if shown == 10:
+            break  # we have 10 rows, so stop looking
+    if shown == 0:
+        print(f"No {form_filter} filings found in this company's recent history.")
 
 
 if __name__ == "__main__":
